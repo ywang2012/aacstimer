@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+    <!-- PWA & iOS Standalone Tags -->
+    <title>Chromatic Timer</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#f1f5f9">
+
+    <!-- Apple Tags for "Add to Home Screen" -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Timer">
+
+    <!-- Icons (You must replace these placeholders with your own .png files) -->
+    <link rel="apple-touch-icon" href="https://placehold.co/180x180/1e293b/white?text=Timer">
+    <link rel="icon" type="image/png" sizes="192x192" href="https://placehold.co/192x192/1e293b/white?text=Timer">
+
+    <style>
+        /* Reset & Base */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f1f5f9;
+            color: #334155;
+            transition: background-color 0.8s ease-in-out;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            /* Handle Safe Areas for iPhone/Edge Mobile */
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+        }
+
+        /* Layout */
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        /* Timer Display */
+        .timer-card {
+            text-align: center;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+
+        .timer-label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0.6;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .timer-digits {
+            font-size: 18vw;
+            line-height: 1;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -2px;
+        }
+
+        @media (min-width: 600px) {
+            .timer-digits { font-size: 120px; }
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+
+        .btn {
+            border: none;
+            padding: 16px 32px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.1s, opacity 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:active { transform: scale(0.96); }
+
+        .btn-primary { background-color: #1e293b; color: white; }
+        .btn-secondary { background-color: white; color: #334155; border: 1px solid #cbd5e1; }
+
+        /* Panels */
+        .config-panel {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 20px;
+            width: 100%;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.5);
+            transition: margin 0.3s, box-shadow 0.3s, border-color 0.3s;
+        }
+
+        .config-header {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255,255,255,0.5);
+            border-bottom: 1px solid transparent;
+            cursor: pointer;
+        }
+        .config-header.expanded { border-bottom-color: #e2e8f0; }
+
+        .config-title-group { display: flex; align-items: center; gap: 10px; }
+        .config-title { font-weight: 700; font-size: 1.1rem; margin: 0; }
+
+        .toggle-btn {
+            background: #f1f5f9;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .preset-select, .speaker-select, .speaker-input {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            background: white;
+            font-size: 0.9rem;
+            color: #334155;
+            width: 100%;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .preset-select { max-width: 140px; }
+
+        /* Error State */
+        .input-error {
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+        }
+
+        /* Collapsible Area */
+        .config-body {
+            max-height: 0;
+            opacity: 0;
+            transition: max-height 0.5s ease-in-out, opacity 0.4s;
+            overflow: hidden;
+        }
+        .config-body.open {
+            max-height: 600px;
+            opacity: 1;
+        }
+
+        .config-content { padding: 20px; }
+
+        /* Speaker Panel Specifics */
+        .speaker-content {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .speaker-input.hidden { display: none; }
+
+        /* Input Row */
+        .input-row { display: flex; gap: 10px; align-items: flex-end; margin-bottom: 15px; }
+        .input-group { flex: 1; }
+        .input-group label { display: block; font-size: 0.75rem; font-weight: 600; color: #64748b; margin-bottom: 4px; }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: #f8fafc;
+            -moz-appearance: textfield;
+        }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        /* Color Input */
+        .color-wrapper {
+            width: 50px;
+            height: 43px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #cbd5e1;
+            position: relative;
+        }
+        input[type="color"] {
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            cursor: pointer;
+            border: none;
+        }
+
+        .add-btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            width: 43px;
+            height: 43px;
+            border-radius: 8px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        /* Events List */
+        .event-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .event-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f8fafc;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .event-info { display: flex; align-items: center; gap: 12px; font-weight: bold; font-family: monospace; }
+        .color-dot { width: 20px; height: 20px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.1); }
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 4px;
+        }
+        .delete-btn:hover { color: #ef4444; }
+
+        /* Report Log Styles */
+        .report-header {
+            display: grid;
+            grid-template-columns: 2fr 2fr 1fr; /* Speaker | Preset | Time */
+            gap: 8px;
+            padding: 10px 12px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.7rem;
+            color: #64748b;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .report-item {
+            display: grid;
+            grid-template-columns: 2fr 2fr 1fr; /* Speaker | Preset | Time */
+            gap: 8px;
+            align-items: center;
+            background: #f8fafc;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            font-size: 0.9rem;
+        }
+
+        .report-col-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .report-speaker { font-weight: 700; color: #1e293b; }
+        .report-preset { color: #64748b; font-size: 0.8rem; }
+        .report-time { font-family: monospace; font-weight: 700; color: #2563eb; text-align: right; }
+
+        .clear-link {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #ef4444;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px 10px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        .clear-link:hover { background-color: #fee2e2; }
+
+        /* Icons */
+        svg { width: 20px; height: 20px; display: block; }
+    </style>
+</head>
+<body id="main-body">
+
+    <div class="main-container">
+        <!-- Timer Section -->
+        <div class="timer-card">
+            <div class="timer-label">Elapsed Time</div>
+            <div id="timer-display" class="timer-digits">00:00</div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <button id="start-btn" onclick="toggleTimer()" class="btn btn-primary">
+                <!-- Play Icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                Start
+            </button>
+            <button onclick="resetTimer()" class="btn btn-secondary">
+                <!-- Reset Icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74-2.74L3 12"></path><path d="M3 3v9h9"></path></svg>
+                Reset
+            </button>
+        </div>
+
+        <!-- EVENTS Panel -->
+        <div class="config-panel">
+            <div class="config-header" id="events-header" onclick="togglePanel('events')">
+                <div class="config-title-group">
+                    <div class="toggle-btn">
+                        <svg id="events-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                    </div>
+                    <h2 class="config-title">Events</h2>
+                </div>
+                <select id="preset-select" onclick="event.stopPropagation()" onchange="applyPreset(this)" class="preset-select">
+                    <option value="custom">Custom</option>
+                    <option value="lightning">Lightning (2m)</option>
+                    <option value="standard" selected>Standard (5-7m)</option>
+                    <option value="evaluation">Evaluation (3m)</option>
+                    <option value="break1">Break (1m)</option>
+                    <option value="break5">Break (5m)</option>
+                </select>
+            </div>
+
+            <div id="events-body" class="config-body open">
+                <div class="config-content">
+                    <!-- Input Form -->
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>Min</label>
+                            <input type="number" id="input-min" min="0" value="0">
+                        </div>
+                        <div class="input-group">
+                            <label>Sec</label>
+                            <input type="number" id="input-sec" min="0" max="59" value="10">
+                        </div>
+                        <div class="input-group" style="flex: 0 0 50px;">
+                            <label>Color</label>
+                            <div class="color-wrapper">
+                                <input type="color" id="input-color" value="#fcd34d">
+                            </div>
+                        </div>
+                        <button onclick="addEvent()" class="add-btn">+</button>
+                    </div>
+
+                    <!-- List -->
+                    <ul id="events-list" class="event-list">
+                        <!-- JS Injected -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- SPEAKER Panel -->
+        <div class="config-panel" id="speaker-panel">
+            <div class="config-header" id="speaker-header" onclick="togglePanel('speaker')">
+                <div class="config-title-group">
+                    <div class="toggle-btn">
+                        <svg id="speaker-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                    </div>
+                    <h2 class="config-title">Speaker</h2>
+                </div>
+            </div>
+            <div id="speaker-body" class="config-body open">
+                <div class="speaker-content">
+                    <select id="speaker-select" onchange="handleSpeakerChange()" class="speaker-select">
+                        <!-- JS Injected -->
+                    </select>
+                    <input type="text" id="speaker-custom-input" class="speaker-input hidden" placeholder="Enter name...">
+                </div>
+            </div>
+        </div>
+
+        <!-- SESSION REPORT Panel -->
+        <div class="config-panel">
+            <div class="config-header" id="report-header" onclick="togglePanel('report')">
+                <div class="config-title-group">
+                    <div class="toggle-btn">
+                        <svg id="report-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                    </div>
+                    <h2 class="config-title">Session Report</h2>
+                </div>
+                <button onclick="event.stopPropagation(); clearHistory(this)" class="clear-link">Clear</button>
+            </div>
+            <div id="report-body" class="config-body open">
+                <div class="config-content" style="padding-top: 0;">
+                    <div class="report-header">
+                        <span>Speaker</span>
+                        <span>Preset</span>
+                        <span style="text-align:right">Duration</span>
+                    </div>
+                    <ul id="session-list" class="event-list">
+                        <li id="empty-log-msg" style="text-align:center; padding:15px; color:#94a3b8; font-style:italic;">No sessions recorded yet</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- STATE ---
+        let timerInterval = null;
+        let totalSeconds = 0;
+        let isRunning = false;
+        let events = [];
+        let audioCtx = null;
+        let wakeLock = null;
+        const defaultColor = '#f1f5f9';
+        let currentPresetName = "Standard (5-7m)";
+        let currentPresetKey = "standard";
+
+        const speakers = ["Select Speaker...", "Hua", "Jin-song", "Haifeng", "Leslie", "David", "Rong", "Henry", "Jessica", "Phillips", "Sammy", "Yujun", "Custom"];
+
+        // --- PRESETS ---
+        const presets = {
+            lightning: [
+                { time: 0, color: '#f1f5f9' },
+                { time: 60, color: '#86efac' },  // 1m Green
+                { time: 90, color: '#fde047' },  // 1.5m Yellow
+                { time: 120, color: '#fc0505' }  // 2m Red
+            ],
+            standard: [
+                { time: 0, color: '#f1f5f9' },
+                { time: 300, color: '#86efac' }, // 5m Green
+                { time: 360, color: '#fde047' }, // 6m Yellow
+                { time: 420, color: '#fc0505' }  // 7m Red
+            ],
+            evaluation: [
+                { time: 0, color: '#f1f5f9' },
+                { time: 120, color: '#86efac' }, // 2m Green
+                { time: 150, color: '#fde047' }, // 2m 30s Yellow
+                { time: 180, color: '#fc0505' }  // 3m Red
+            ],
+            break1: [
+                { time: 0, color: '#f1f5f9' },
+                { time: 60, color: '#fc0505' }   // 1m Red (Time Up)
+            ],
+            break5: [
+                { time: 0, color: '#f1f5f9' },
+                { time: 300, color: '#fc0505' }  // 5m Red (Time Up)
+            ]
+        };
+
+        // --- DOM ELEMENTS ---
+        const els = {
+            display: document.getElementById('timer-display'),
+            body: document.getElementById('main-body'),
+            startBtn: document.getElementById('start-btn'),
+            list: document.getElementById('events-list'),
+            min: document.getElementById('input-min'),
+            sec: document.getElementById('input-sec'),
+            color: document.getElementById('input-color'),
+            preset: document.getElementById('preset-select'),
+            speakerSelect: document.getElementById('speaker-select'),
+            speakerInput: document.getElementById('speaker-custom-input'),
+            sessionList: document.getElementById('session-list'),
+            emptyLogMsg: document.getElementById('empty-log-msg'),
+            speakerPanel: document.getElementById('speaker-panel')
+        };
+
+        // --- AUDIO SYSTEM ---
+        function ensureAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) audioCtx = new AudioContext();
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playAlarm() {
+            ensureAudio();
+            if (!audioCtx) return;
+
+            const t = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = 'sine';
+            osc.frequency.value = 880;
+
+            // Double Beep
+            gain.gain.setValueAtTime(0, t);
+            gain.gain.linearRampToValueAtTime(0.1, t + 0.05);
+            gain.gain.setValueAtTime(0.1, t + 0.1);
+            gain.gain.linearRampToValueAtTime(0, t + 0.15);
+
+            gain.gain.setValueAtTime(0, t + 0.25);
+            gain.gain.linearRampToValueAtTime(0.1, t + 0.3);
+            gain.gain.setValueAtTime(0.1, t + 0.35);
+            gain.gain.linearRampToValueAtTime(0, t + 0.4);
+
+            osc.start(t);
+            osc.stop(t + 0.5);
+        }
+
+        // --- WAKE LOCK ---
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
+            } catch (err) { console.log(err); }
+        }
+        function releaseWakeLock() {
+            if (wakeLock !== null) wakeLock.release().then(() => wakeLock = null);
+        }
+        document.addEventListener('visibilitychange', async () => {
+            if (wakeLock !== null && document.visibilityState === 'visible' && isRunning) await requestWakeLock();
+        });
+
+        // --- CORE LOGIC ---
+        function init() {
+            renderTime();
+            initSpeakers();
+            applyPreset(els.preset);
+            // Explicitly set Start button text on initial load
+            els.startBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Start`;
+        }
+
+        function initSpeakers() {
+            els.speakerSelect.innerHTML = speakers.map(s => {
+                if (s === "Select Speaker...") return `<option value="nobody">${s}</option>`;
+                return `<option value="${s}">${s}</option>`;
+            }).join('');
+        }
+
+        function handleSpeakerChange() {
+            // Remove error styling if user interacts
+            els.speakerSelect.classList.remove('input-error');
+
+            if (els.speakerSelect.value === 'Custom') {
+                els.speakerInput.classList.remove('hidden');
+                els.speakerInput.focus();
+            } else {
+                els.speakerInput.classList.add('hidden');
+            }
+        }
+
+        function toggleTimer() { isRunning ? stopTimer() : startTimer(); }
+
+        function startTimer() {
+            // Speaker Validation
+            const speakerVal = els.speakerSelect.value;
+            const isBreak = currentPresetKey.startsWith('break');
+
+            if (speakerVal === 'nobody' && !isBreak) {
+                // VISUAL ALERT instead of alert()
+                // 1. Expand speaker panel
+                setPanelState('speaker', true);
+                // 2. Scroll to it
+                els.speakerPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // 3. Flash error
+                els.speakerSelect.classList.add('input-error');
+                setTimeout(() => {
+                    // Little shake or color pulse can be handled by CSS transition
+                }, 100);
+                return;
+            }
+
+            ensureAudio();
+            requestWakeLock();
+            isRunning = true;
+            els.startBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> Pause`;
+            els.startBtn.style.backgroundColor = "#475569";
+
+            setAllPanels(false); // Collapse all
+
+            timerInterval = setInterval(() => {
+                totalSeconds++;
+                renderTime();
+                checkColorChange();
+            }, 1000);
+        }
+
+        function stopTimer() {
+            isRunning = false;
+            releaseWakeLock();
+            els.startBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Resume`;
+            els.startBtn.style.backgroundColor = "#1e293b";
+
+            setAllPanels(true); // Expand all
+
+            clearInterval(timerInterval);
+        }
+
+        function resetTimer() {
+            const isBreak = currentPresetKey.startsWith('break');
+
+            // Only log if time passed AND it is not a break
+            if (totalSeconds > 0 && !isBreak) {
+                addSessionLog();
+            }
+
+            stopTimer();
+            totalSeconds = 0;
+            els.startBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Start`;
+            els.startBtn.style.backgroundColor = "#1e293b";
+            els.body.style.backgroundColor = defaultColor;
+
+            // Reset Speaker
+            els.speakerSelect.value = 'nobody';
+            handleSpeakerChange(); // Ensures custom input is hidden
+
+            setAllPanels(true);
+
+            renderTime();
+        }
+
+        function addSessionLog() {
+            let speaker = els.speakerSelect.value;
+            if (speaker === 'nobody') speaker = 'Unknown';
+            if (speaker === 'Custom') {
+                speaker = els.speakerInput.value || 'Custom';
+            }
+
+            const m = Math.floor(totalSeconds / 60);
+            const s = totalSeconds % 60;
+            const timeStr = `${pad(m)}:${pad(s)}`;
+
+            if (els.emptyLogMsg) {
+                els.emptyLogMsg.remove();
+                els.emptyLogMsg = null;
+            }
+
+            const li = document.createElement('li');
+            li.className = 'report-item';
+            li.innerHTML = `
+                <span class="report-speaker report-col-text">${speaker}</span>
+                <span class="report-preset report-col-text">${currentPresetName}</span>
+                <span class="report-time">${timeStr}</span>
+            `;
+
+            els.sessionList.appendChild(li);
+            els.sessionList.scrollTop = els.sessionList.scrollHeight;
+        }
+
+        // Replaced confirm() with double-tap logic
+        let clearTimeoutHandle;
+        function clearHistory(btn) {
+            if (btn.innerText === 'Clear') {
+                // First Click: Change to Confirm
+                btn.innerText = 'Confirm?';
+                btn.style.color = '#dc2626'; // Darker red
+                btn.style.fontWeight = '800';
+
+                // Auto reset if not clicked again
+                clearTimeoutHandle = setTimeout(() => {
+                    btn.innerText = 'Clear';
+                    btn.style.color = '#ef4444';
+                    btn.style.fontWeight = '600';
+                }, 3000);
+
+            } else {
+                // Second Click: Execute Clear
+                els.sessionList.innerHTML = '<li id="empty-log-msg" style="text-align:center; padding:15px; color:#94a3b8; font-style:italic;">No sessions recorded yet</li>';
+                els.emptyLogMsg = document.getElementById('empty-log-msg');
+
+                // Reset Button
+                btn.innerText = 'Clear';
+                btn.style.color = '#ef4444';
+                btn.style.fontWeight = '600';
+                if (clearTimeoutHandle) clearTimeout(clearTimeoutHandle);
+            }
+        }
+
+        function renderTime() {
+            const m = Math.floor(totalSeconds / 60);
+            const s = totalSeconds % 60;
+            els.display.textContent = `${pad(m)}:${pad(s)}`;
+        }
+
+        function pad(num) { return num.toString().padStart(2, '0'); }
+
+        function checkColorChange() {
+            const exactMatch = events.find(e => e.time === totalSeconds);
+            if (exactMatch) {
+                els.body.style.backgroundColor = exactMatch.color;
+                if (events.length > 0) {
+                    const lastEvent = events[events.length - 1];
+                    if (exactMatch === lastEvent && exactMatch.time > 0) playAlarm();
+                }
+            } else {
+                const pastEvents = events.filter(e => e.time <= totalSeconds).sort((a, b) => b.time - a.time);
+                els.body.style.backgroundColor = pastEvents.length > 0 ? pastEvents[0].color : defaultColor;
+            }
+        }
+
+        // --- PANEL UI LOGIC ---
+        function togglePanel(id) {
+            const body = document.getElementById(`${id}-body`);
+            const header = document.getElementById(`${id}-header`);
+            const icon = document.getElementById(`${id}-icon`);
+
+            const isOpen = body.classList.contains('open');
+
+            if (isOpen) {
+                body.classList.remove('open');
+                header.classList.remove('expanded');
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                body.classList.add('open');
+                header.classList.add('expanded');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        function setPanelState(id, open) {
+            const body = document.getElementById(`${id}-body`);
+            const header = document.getElementById(`${id}-header`);
+            const icon = document.getElementById(`${id}-icon`);
+
+            if (!open) {
+                body.classList.remove('open');
+                header.classList.remove('expanded');
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                body.classList.add('open');
+                header.classList.add('expanded');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        function setAllPanels(open) {
+            ['events', 'speaker', 'report'].forEach(id => setPanelState(id, open));
+        }
+
+        function applyPreset(selectEl) {
+            const key = selectEl.value;
+            currentPresetName = selectEl.options[selectEl.selectedIndex].text;
+            currentPresetKey = key;
+
+            if (key === 'custom') return;
+            if (presets[key]) {
+                stopTimer();
+                totalSeconds = 0;
+                renderTime();
+                els.body.style.backgroundColor = defaultColor;
+
+                events = presets[key].map((p, idx) => ({
+                    id: Date.now() + idx,
+                    time: p.time,
+                    color: p.color
+                }));
+                renderEvents();
+            }
+        }
+
+        function addEvent() {
+            els.preset.value = 'custom';
+            currentPresetName = 'Custom Schedule';
+            currentPresetKey = 'custom';
+            const m = parseInt(els.min.value) || 0;
+            const s = parseInt(els.sec.value) || 0;
+            const total = (m * 60) + s;
+            const color = els.color.value;
+
+            const exists = events.find(e => e.time === total);
+            if (exists) exists.color = color;
+            else events.push({ id: Date.now(), time: total, color: color });
+
+            events.sort((a, b) => a.time - b.time);
+            renderEvents();
+            if (totalSeconds > 0) checkColorChange();
+        }
+
+        function removeEvent(id) {
+            els.preset.value = 'custom';
+            currentPresetName = 'Custom Schedule';
+            currentPresetKey = 'custom';
+            events = events.filter(e => e.id !== id);
+            renderEvents();
+            checkColorChange();
+        }
+
+        function renderEvents() {
+            if (events.length === 0) {
+                els.list.innerHTML = '<li style="text-align:center; padding:15px; color:#94a3b8; font-style:italic;">No events configured</li>';
+                return;
+            }
+            els.list.innerHTML = events.map(e => {
+                const m = Math.floor(e.time / 60);
+                const s = e.time % 60;
+                return `
+                    <li class="event-item">
+                        <div class="event-info">
+                            <div class="color-dot" style="background-color: ${e.color}"></div>
+                            ${pad(m)}:${pad(s)}
+                        </div>
+                        <button onclick="removeEvent(${e.id})" class="delete-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
+                    </li>
+                `;
+            }).join('');
+        }
+
+        // --- PWA Service Worker Registration ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Service Worker registered.', reg))
+                    .catch(err => console.log('Service Worker registration failed: ', err));
+            });
+        }
+
+        // Start
+        init();
+    </script>
+</body>
+</html>

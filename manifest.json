@@ -1,0 +1,21 @@
+{
+  "name": "Chromatic Timer",
+  "short_name": "Timer",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f1f5f9",
+  "theme_color": "#1e293b",
+  "description": "A timer that changes color at specific events.",
+  "icons": [
+    {
+      "src": "https://placehold.co/192x192/1e293b/white?text=Timer",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://placehold.co/512x512/1e293b/white?text=Timer",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
