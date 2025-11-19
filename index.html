@@ -538,6 +538,7 @@
         let isRunning = false;
         let events = [];
         let audioCtx = null;
+        let silentOsc = null; // Track silent oscillator for iOS Keep-Alive
         let wakeLock = null;
         const defaultColor = '#f1f5f9';
         let currentPresetName = "Standard (5-7m)";
@@ -606,32 +607,50 @@
                 if (AudioContext) audioCtx = new AudioContext();
             }
 
-            if (audioCtx) {
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
 
-                // iOS PWA Fix: Play a silent buffer to force the audio session to active
-                // This prevents the OS from sleeping the audio engine in standalone mode
+        // 1. Continuous Silent Hum for iOS PWA (The "Keep Alive" signal)
+        function startSilentHum() {
+            ensureAudio();
+            if (!audioCtx) return;
+
+            stopSilentHum(); // Ensure only one runs
+
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                // Ultra-low frequency, near-zero gain
+                osc.type = 'sine';
+                osc.frequency.value = 1;
+                gain.gain.value = 0.0001;
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+
+                silentOsc = osc;
+            } catch (e) {
+                console.error("Keep-alive failed", e);
+            }
+        }
+
+        function stopSilentHum() {
+            if (silentOsc) {
                 try {
-                    const buffer = audioCtx.createBuffer(1, 1, 22050);
-                    const source = audioCtx.createBufferSource();
-                    source.buffer = buffer;
-                    source.connect(audioCtx.destination);
-                    source.start(0);
-                } catch (e) {
-                    console.error("Audio unlock failed", e);
-                }
+                    silentOsc.stop();
+                    silentOsc.disconnect();
+                } catch(e) {}
+                silentOsc = null;
             }
         }
 
         function playAlarm() {
-            // Re-ensure audio context is active just before playing
-            if (!audioCtx) ensureAudio();
+            ensureAudio();
             if (!audioCtx) return;
-
-            // If context suspended (rare if wake lock works, but possible), try resume
-            if (audioCtx.state === 'suspended') audioCtx.resume();
 
             const t = audioCtx.currentTime;
             const osc = audioCtx.createOscillator();
@@ -775,6 +794,9 @@
         }
 
         function handleSpeakerChange() {
+            // Start audio unlock sequence on speaker interaction to prep iOS audio engine early
+            ensureAudio();
+
             els.speakerSelect.classList.remove('input-error');
 
             if (els.speakerSelect.value === 'Custom') {
@@ -802,8 +824,10 @@
                 return;
             }
 
-            ensureAudio();
+            // iOS Fix: Start continuous silent audio
+            startSilentHum();
             requestWakeLock();
+
             isRunning = true;
             els.startBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> Pause`;
             els.startBtn.style.backgroundColor = "#475569";
@@ -819,6 +843,7 @@
 
         function stopTimer() {
             isRunning = false;
+            stopSilentHum(); // Stop the battery drain/audio lock
             releaseWakeLock();
             els.startBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Resume`;
             els.startBtn.style.backgroundColor = "#1e293b";
@@ -835,7 +860,7 @@
                 addSessionLog();
             }
 
-            stopTimer();
+            stopTimer(); // also stops silent hum
             totalSeconds = 0;
             els.startBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Start`;
             els.startBtn.style.backgroundColor = "#1e293b";
