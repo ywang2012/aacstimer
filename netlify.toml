@@ -3,7 +3,8 @@
   publish = "build"
 
 [context]
-  environment = "production"
+    [context.environment]
+    publish = "dist"
 
 [headers]
   "*/manifest.json" = ["Cache-Control: max-age=31536000, immutable"]
