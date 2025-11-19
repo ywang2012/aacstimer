@@ -1,10 +1,14 @@
-[build]
-  command = "npm run build"
-  publish = "build"
+[[headers]]
+  # Apply these headers to the Service Worker file
+  for = "/sw.js"
+  [headers.values]
+    # Do not cache the service worker; always check for updates
+    Cache-Control = "max-age=0, no-cache, no-store, must-revalidate"
 
-[context]
-    [context.environment]
-    publish = "dist"
+[[headers]]
+  # Standard caching for other files
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
 
-[headers]
-  "*/manifest.json" = ["Cache-Control: max-age=31536000, immutable"]
