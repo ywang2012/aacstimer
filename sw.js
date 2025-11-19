@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chromatic-timer-v7'; // Incremented version
+const CACHE_NAME = 'chromatic-timer-v9'; // Incremented version
 const URLS_TO_CACHE = [
   '/',
   '/index.html',

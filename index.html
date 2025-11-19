@@ -410,6 +410,44 @@
             </button>
         </div>
 
+        <!-- SPEAKER Panel (Consolidated Settings) -->
+        <div class="config-panel" id="speaker-panel">
+            <div class="config-header" id="speaker-header" onclick="togglePanel('speaker')">
+                <div class="config-title-group">
+                    <div class="toggle-btn">
+                        <svg id="speaker-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                    </div>
+                    <h2 class="config-title">Speaker</h2>
+                </div>
+                <!-- Settings Icon -->
+                <button onclick="event.stopPropagation(); toggleSettingsView()" class="settings-btn" title="Edit Speakers">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                </button>
+            </div>
+            <div id="speaker-body" class="config-body open">
+                <div class="speaker-content">
+
+                    <!-- View 1: Select Speaker -->
+                    <div id="speaker-select-view" class="speaker-view">
+                        <select id="speaker-select" onchange="handleSpeakerChange()" class="speaker-select">
+                            <!-- JS Injected -->
+                        </select>
+                        <input type="text" id="speaker-custom-input" class="speaker-input hidden" placeholder="Enter name...">
+                    </div>
+
+                    <!-- View 2: Edit Settings -->
+                    <div id="speaker-edit-view" class="speaker-view hidden">
+                        <label style="display:block; margin-bottom:8px; font-weight:bold; font-size:0.9rem;">Edit Speaker List</label>
+                        <div style="font-size:0.8rem; color:#64748b; margin-bottom:10px;">Separate names with commas.</div>
+                        <textarea id="settings-speakers-input" class="settings-textarea" placeholder="Hua, Jin-song, Haifeng..."></textarea>
+                        <button onclick="saveSpeakerSettings()" class="save-btn">Save Changes</button>
+                        <button onclick="resetSpeakerSettings(this)" class="reset-btn">Reset to Default</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
         <!-- EVENTS Panel -->
         <div class="config-panel">
             <div class="config-header" id="events-header" onclick="togglePanel('events')">
@@ -463,44 +501,6 @@
                     <ul id="events-list" class="event-list">
                         <!-- JS Injected -->
                     </ul>
-                </div>
-            </div>
-        </div>
-
-        <!-- SPEAKER Panel (Consolidated Settings) -->
-        <div class="config-panel" id="speaker-panel">
-            <div class="config-header" id="speaker-header" onclick="togglePanel('speaker')">
-                <div class="config-title-group">
-                    <div class="toggle-btn">
-                        <svg id="speaker-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
-                    </div>
-                    <h2 class="config-title">Speaker</h2>
-                </div>
-                <!-- Settings Icon -->
-                <button onclick="event.stopPropagation(); toggleSettingsView()" class="settings-btn" title="Edit Speakers">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                </button>
-            </div>
-            <div id="speaker-body" class="config-body open">
-                <div class="speaker-content">
-
-                    <!-- View 1: Select Speaker -->
-                    <div id="speaker-select-view" class="speaker-view">
-                        <select id="speaker-select" onchange="handleSpeakerChange()" class="speaker-select">
-                            <!-- JS Injected -->
-                        </select>
-                        <input type="text" id="speaker-custom-input" class="speaker-input hidden" placeholder="Enter name...">
-                    </div>
-
-                    <!-- View 2: Edit Settings -->
-                    <div id="speaker-edit-view" class="speaker-view hidden">
-                        <label style="display:block; margin-bottom:8px; font-weight:bold; font-size:0.9rem;">Edit Speaker List</label>
-                        <div style="font-size:0.8rem; color:#64748b; margin-bottom:10px;">Separate names with commas.</div>
-                        <textarea id="settings-speakers-input" class="settings-textarea" placeholder="Hua, Jin-song, Haifeng..."></textarea>
-                        <button onclick="saveSpeakerSettings()" class="save-btn">Save Changes</button>
-                        <button onclick="resetSpeakerSettings(this)" class="reset-btn">Reset to Default</button>
-                    </div>
-
                 </div>
             </div>
         </div>
@@ -605,14 +605,33 @@
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 if (AudioContext) audioCtx = new AudioContext();
             }
-            if (audioCtx && audioCtx.state === 'suspended') {
-                audioCtx.resume();
+
+            if (audioCtx) {
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                // iOS PWA Fix: Play a silent buffer to force the audio session to active
+                // This prevents the OS from sleeping the audio engine in standalone mode
+                try {
+                    const buffer = audioCtx.createBuffer(1, 1, 22050);
+                    const source = audioCtx.createBufferSource();
+                    source.buffer = buffer;
+                    source.connect(audioCtx.destination);
+                    source.start(0);
+                } catch (e) {
+                    console.error("Audio unlock failed", e);
+                }
             }
         }
 
         function playAlarm() {
-            ensureAudio();
+            // Re-ensure audio context is active just before playing
+            if (!audioCtx) ensureAudio();
             if (!audioCtx) return;
+
+            // If context suspended (rare if wake lock works, but possible), try resume
+            if (audioCtx.state === 'suspended') audioCtx.resume();
 
             const t = audioCtx.currentTime;
             const osc = audioCtx.createOscillator();
@@ -894,7 +913,6 @@
             const exactMatch = events.find(e => e.time === totalSeconds);
             if (exactMatch) {
                 els.body.style.backgroundColor = exactMatch.color;
-                // Check boolean alert property instead of hardcoded logic
                 if (exactMatch.alert) {
                     playAlarm();
                 }
@@ -908,11 +926,9 @@
             inputAlertState = !inputAlertState;
             if (inputAlertState) {
                 els.alertBtn.classList.add('active');
-                // Change icon to filled bell
                 els.alertBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>`;
             } else {
                 els.alertBtn.classList.remove('active');
-                // Change icon to outlined bell
                 els.alertBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>`;
             }
         }
