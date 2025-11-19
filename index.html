@@ -383,6 +383,20 @@
         }
         .clear-link:hover { background-color: #fee2e2; }
 
+        .share-link {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #2563eb;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px 10px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+            margin-right: 5px;
+        }
+        .share-link:hover { background-color: #dbeafe; }
+
         /* Icons */
         svg { width: 20px; height: 20px; display: block; }
     </style>
@@ -514,7 +528,10 @@
                     </div>
                     <h2 class="config-title">Session Report</h2>
                 </div>
-                <button onclick="event.stopPropagation(); clearHistory(this)" class="clear-link">Clear</button>
+                <div>
+                    <button onclick="event.stopPropagation(); shareReport()" class="share-link">Share</button>
+                    <button onclick="event.stopPropagation(); clearHistory(this)" class="clear-link">Clear</button>
+                </div>
             </div>
             <div id="report-body" class="config-body open">
                 <div class="config-content" style="padding-top: 0;">
@@ -900,6 +917,36 @@
 
             els.sessionList.appendChild(li);
             els.sessionList.scrollTop = els.sessionList.scrollHeight;
+        }
+
+        function shareReport() {
+            const items = document.querySelectorAll('.report-item');
+            if (items.length === 0) {
+                alert("No report to share.");
+                return;
+            }
+
+            let text = "Session Report:\n\n";
+            items.forEach(item => {
+                const speaker = item.querySelector('.report-speaker').innerText;
+                const preset = item.querySelector('.report-preset').innerText;
+                const time = item.querySelector('.report-time').innerText;
+                text += `${speaker} | ${preset} | ${time}\n`;
+            });
+
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Chromatic Timer Report',
+                    text: text
+                }).catch(err => console.log('Share failed:', err));
+            } else {
+                navigator.clipboard.writeText(text).then(() => {
+                    const btn = document.querySelector('.share-link');
+                    const original = btn.innerText;
+                    btn.innerText = 'Copied!';
+                    setTimeout(() => btn.innerText = original, 2000);
+                });
+            }
         }
 
         let clearTimeoutHandle;
