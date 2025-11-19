@@ -1,0 +1,9 @@
+[build]
+  command = "npm run build"
+  publish = "build"
+
+[context]
+  environment = "production"
+
+[headers]
+  "*/manifest.json" = ["Cache-Control: max-age=31536000, immutable"]
