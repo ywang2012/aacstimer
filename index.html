@@ -14,7 +14,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Timer">
 
-    <!-- Icons (You must replace these placeholders with your own .png files) -->
+    <!-- Icons -->
     <link rel="apple-touch-icon" href="https://placehold.co/180x180/1e293b/white?text=Timer">
     <link rel="icon" type="image/png" sizes="192x192" href="https://placehold.co/192x192/1e293b/white?text=Timer">
 
@@ -31,7 +31,7 @@
             min-height: 100dvh;
             display: flex;
             flex-direction: column;
-            /* Handle Safe Areas for iPhone/Edge Mobile */
+            /* Handle Safe Areas */
             padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
             padding-left: env(safe-area-inset-left);
@@ -148,7 +148,17 @@
             transition: transform 0.3s;
         }
 
-        .preset-select, .speaker-select, .speaker-input {
+        .settings-btn {
+            background: none;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            padding: 5px;
+            transition: color 0.2s;
+        }
+        .settings-btn:hover { color: #1e293b; }
+
+        .preset-select, .speaker-select, .speaker-input, .settings-textarea {
             padding: 8px 12px;
             border-radius: 8px;
             border: 1px solid #cbd5e1;
@@ -160,6 +170,13 @@
         }
 
         .preset-select { max-width: 140px; }
+
+        .settings-textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+            margin-bottom: 10px;
+        }
 
         /* Error State */
         .input-error {
@@ -189,6 +206,10 @@
             gap: 10px;
         }
         .speaker-input.hidden { display: none; }
+
+        /* Speaker View Toggle */
+        .speaker-view { display: block; transition: opacity 0.3s; }
+        .speaker-view.hidden { display: none; }
 
         /* Input Row */
         .input-row { display: flex; gap: 10px; align-items: flex-end; margin-bottom: 15px; }
@@ -223,6 +244,27 @@
             border: none;
         }
 
+        /* Alert Toggle Button */
+        .alert-toggle-btn {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            width: 43px;
+            height: 43px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #94a3b8;
+            transition: all 0.2s;
+        }
+        .alert-toggle-btn.active {
+            background: #dbeafe;
+            border-color: #2563eb;
+            color: #2563eb;
+        }
+        .alert-toggle-btn svg { width: 20px; height: 20px; }
+
         .add-btn {
             background: #2563eb;
             color: white;
@@ -235,6 +277,30 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
+        }
+
+        .save-btn {
+            background: #1e293b;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 5px;
+        }
+
+        .reset-btn {
+            background: white;
+            color: #64748b;
+            border: 1px solid #cbd5e1;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
         }
 
         /* Events List */
@@ -257,6 +323,9 @@
         }
         .event-info { display: flex; align-items: center; gap: 12px; font-weight: bold; font-family: monospace; }
         .color-dot { width: 20px; height: 20px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.1); }
+        .alert-icon { width: 16px; height: 16px; color: #64748b; margin-left: 8px; }
+        .alert-icon.hidden { display: none; }
+
         .delete-btn {
             background: none;
             border: none;
@@ -378,6 +447,15 @@
                                 <input type="color" id="input-color" value="#fcd34d">
                             </div>
                         </div>
+
+                        <!-- Alert Toggle Button -->
+                        <div class="input-group" style="flex: 0 0 43px;">
+                            <label>Alert</label>
+                            <button id="input-alert-btn" onclick="toggleAlertInput()" class="alert-toggle-btn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                            </button>
+                        </div>
+
                         <button onclick="addEvent()" class="add-btn">+</button>
                     </div>
 
@@ -389,7 +467,7 @@
             </div>
         </div>
 
-        <!-- SPEAKER Panel -->
+        <!-- SPEAKER Panel (Consolidated Settings) -->
         <div class="config-panel" id="speaker-panel">
             <div class="config-header" id="speaker-header" onclick="togglePanel('speaker')">
                 <div class="config-title-group">
@@ -398,13 +476,31 @@
                     </div>
                     <h2 class="config-title">Speaker</h2>
                 </div>
+                <!-- Settings Icon -->
+                <button onclick="event.stopPropagation(); toggleSettingsView()" class="settings-btn" title="Edit Speakers">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                </button>
             </div>
             <div id="speaker-body" class="config-body open">
                 <div class="speaker-content">
-                    <select id="speaker-select" onchange="handleSpeakerChange()" class="speaker-select">
-                        <!-- JS Injected -->
-                    </select>
-                    <input type="text" id="speaker-custom-input" class="speaker-input hidden" placeholder="Enter name...">
+
+                    <!-- View 1: Select Speaker -->
+                    <div id="speaker-select-view" class="speaker-view">
+                        <select id="speaker-select" onchange="handleSpeakerChange()" class="speaker-select">
+                            <!-- JS Injected -->
+                        </select>
+                        <input type="text" id="speaker-custom-input" class="speaker-input hidden" placeholder="Enter name...">
+                    </div>
+
+                    <!-- View 2: Edit Settings -->
+                    <div id="speaker-edit-view" class="speaker-view hidden">
+                        <label style="display:block; margin-bottom:8px; font-weight:bold; font-size:0.9rem;">Edit Speaker List</label>
+                        <div style="font-size:0.8rem; color:#64748b; margin-bottom:10px;">Separate names with commas.</div>
+                        <textarea id="settings-speakers-input" class="settings-textarea" placeholder="Hua, Jin-song, Haifeng..."></textarea>
+                        <button onclick="saveSpeakerSettings()" class="save-btn">Save Changes</button>
+                        <button onclick="resetSpeakerSettings(this)" class="reset-btn">Reset to Default</button>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -446,36 +542,39 @@
         const defaultColor = '#f1f5f9';
         let currentPresetName = "Standard (5-7m)";
         let currentPresetKey = "standard";
+        let inputAlertState = false; // Track state of new event alert toggle
 
-        const speakers = ["Select Speaker...", "Hua", "Jin-song", "Haifeng", "Leslie", "David", "Rong", "Henry", "Jessica", "Phillips", "Sammy", "Yujun", "Custom"];
+        // Speaker Management
+        const defaultSpeakers = ["Hua", "Jin-song", "Haifeng", "Leslie", "David", "Rong", "Henry", "Jessica", "Phillips", "Sammy", "Yujun"];
+        let currentSpeakers = [...defaultSpeakers];
 
         // --- PRESETS ---
         const presets = {
             lightning: [
-                { time: 0, color: '#f1f5f9' },
-                { time: 60, color: '#86efac' },  // 1m Green
-                { time: 90, color: '#fde047' },  // 1.5m Yellow
-                { time: 120, color: '#fc0505' }  // 2m Red
+                { time: 0, color: '#f1f5f9', alert: false },
+                { time: 60, color: '#86efac', alert: false },  // 1m Green
+                { time: 90, color: '#fde047', alert: false },  // 1.5m Yellow
+                { time: 120, color: '#fc0505', alert: true }   // 2m Red (Alert ON)
             ],
             standard: [
-                { time: 0, color: '#f1f5f9' },
-                { time: 300, color: '#86efac' }, // 5m Green
-                { time: 360, color: '#fde047' }, // 6m Yellow
-                { time: 420, color: '#fc0505' }  // 7m Red
+                { time: 0, color: '#f1f5f9', alert: false },
+                { time: 300, color: '#86efac', alert: false }, // 5m Green
+                { time: 360, color: '#fde047', alert: false }, // 6m Yellow
+                { time: 420, color: '#fc0505', alert: true }   // 7m Red (Alert ON)
             ],
             evaluation: [
-                { time: 0, color: '#f1f5f9' },
-                { time: 120, color: '#86efac' }, // 2m Green
-                { time: 150, color: '#fde047' }, // 2m 30s Yellow
-                { time: 180, color: '#fc0505' }  // 3m Red
+                { time: 0, color: '#f1f5f9', alert: false },
+                { time: 120, color: '#86efac', alert: false }, // 2m Green
+                { time: 150, color: '#fde047', alert: false }, // 2m 30s Yellow
+                { time: 180, color: '#fc0505', alert: true }   // 3m Red (Alert ON)
             ],
             break1: [
-                { time: 0, color: '#f1f5f9' },
-                { time: 60, color: '#fc0505' }   // 1m Red (Time Up)
+                { time: 0, color: '#f1f5f9', alert: false },
+                { time: 60, color: '#fc0505', alert: true }   // 1m Red (Alert ON)
             ],
             break5: [
-                { time: 0, color: '#f1f5f9' },
-                { time: 300, color: '#fc0505' }  // 5m Red (Time Up)
+                { time: 0, color: '#f1f5f9', alert: false },
+                { time: 300, color: '#fc0505', alert: true }  // 5m Red (Alert ON)
             ]
         };
 
@@ -488,12 +587,16 @@
             min: document.getElementById('input-min'),
             sec: document.getElementById('input-sec'),
             color: document.getElementById('input-color'),
+            alertBtn: document.getElementById('input-alert-btn'),
             preset: document.getElementById('preset-select'),
             speakerSelect: document.getElementById('speaker-select'),
             speakerInput: document.getElementById('speaker-custom-input'),
             sessionList: document.getElementById('session-list'),
             emptyLogMsg: document.getElementById('empty-log-msg'),
-            speakerPanel: document.getElementById('speaker-panel')
+            speakerPanel: document.getElementById('speaker-panel'),
+            settingsInput: document.getElementById('settings-speakers-input'),
+            speakerSelectView: document.getElementById('speaker-select-view'),
+            speakerEditView: document.getElementById('speaker-edit-view')
         };
 
         // --- AUDIO SYSTEM ---
@@ -550,22 +653,109 @@
 
         // --- CORE LOGIC ---
         function init() {
+            loadSpeakerSettings();
             renderTime();
             initSpeakers();
             applyPreset(els.preset);
-            // Explicitly set Start button text on initial load
             els.startBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Start`;
         }
 
+        function loadSpeakerSettings() {
+            const stored = localStorage.getItem('chromatic-timer-speakers');
+            if (stored) {
+                try {
+                    currentSpeakers = JSON.parse(stored);
+                } catch(e) {
+                    currentSpeakers = [...defaultSpeakers];
+                }
+            }
+            els.settingsInput.value = currentSpeakers.join(', ');
+        }
+
+        function toggleSettingsView() {
+            const isEditing = !els.speakerEditView.classList.contains('hidden');
+
+            if (isEditing) {
+                els.speakerEditView.classList.add('hidden');
+                els.speakerSelectView.classList.remove('hidden');
+            } else {
+                setPanelState('speaker', true);
+                els.speakerSelectView.classList.add('hidden');
+                els.speakerEditView.classList.remove('hidden');
+            }
+        }
+
+        function saveSpeakerSettings() {
+            const raw = els.settingsInput.value;
+            const list = raw.split(',').map(s => s.trim()).filter(s => s.length > 0);
+
+            if (list.length === 0) {
+                els.settingsInput.classList.add('input-error');
+                setTimeout(() => els.settingsInput.classList.remove('input-error'), 500);
+                return;
+            }
+
+            currentSpeakers = list;
+            localStorage.setItem('chromatic-timer-speakers', JSON.stringify(currentSpeakers));
+
+            const currentSelection = els.speakerSelect.value;
+            initSpeakers();
+
+            if (currentSpeakers.includes(currentSelection) || currentSelection === 'nobody' || currentSelection === 'Custom') {
+                els.speakerSelect.value = currentSelection;
+            } else {
+                els.speakerSelect.value = 'nobody';
+                handleSpeakerChange();
+            }
+
+            toggleSettingsView();
+        }
+
+        let resetTimeoutHandle;
+        function resetSpeakerSettings(btn) {
+            if (btn.innerText === 'Reset to Default') {
+                btn.innerText = 'Confirm Reset?';
+                btn.style.color = '#dc2626';
+                btn.style.borderColor = '#dc2626';
+
+                resetTimeoutHandle = setTimeout(() => {
+                    btn.innerText = 'Reset to Default';
+                    btn.style.color = '#64748b';
+                    btn.style.borderColor = '#cbd5e1';
+                }, 3000);
+
+            } else {
+                currentSpeakers = [...defaultSpeakers];
+                localStorage.removeItem('chromatic-timer-speakers');
+                els.settingsInput.value = currentSpeakers.join(', ');
+
+                initSpeakers();
+                els.speakerSelect.value = 'nobody';
+                handleSpeakerChange();
+
+                btn.innerText = 'Reset to Default';
+                btn.style.color = '#64748b';
+                btn.style.borderColor = '#cbd5e1';
+                if (resetTimeoutHandle) clearTimeout(resetTimeoutHandle);
+
+                const originalBg = els.settingsInput.style.backgroundColor;
+                els.settingsInput.style.backgroundColor = '#dcfce7';
+                setTimeout(() => {
+                     els.settingsInput.style.backgroundColor = originalBg;
+                }, 500);
+            }
+        }
+
         function initSpeakers() {
-            els.speakerSelect.innerHTML = speakers.map(s => {
+            const fullList = ["Select Speaker...", ...currentSpeakers, "Custom"];
+
+            els.speakerSelect.innerHTML = fullList.map(s => {
                 if (s === "Select Speaker...") return `<option value="nobody">${s}</option>`;
                 return `<option value="${s}">${s}</option>`;
             }).join('');
         }
 
         function handleSpeakerChange() {
-            // Remove error styling if user interacts
             els.speakerSelect.classList.remove('input-error');
 
             if (els.speakerSelect.value === 'Custom') {
@@ -579,21 +769,17 @@
         function toggleTimer() { isRunning ? stopTimer() : startTimer(); }
 
         function startTimer() {
-            // Speaker Validation
             const speakerVal = els.speakerSelect.value;
             const isBreak = currentPresetKey.startsWith('break');
 
             if (speakerVal === 'nobody' && !isBreak) {
-                // VISUAL ALERT instead of alert()
-                // 1. Expand speaker panel
+                if (!els.speakerEditView.classList.contains('hidden')) {
+                     toggleSettingsView();
+                }
+
                 setPanelState('speaker', true);
-                // 2. Scroll to it
                 els.speakerPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                // 3. Flash error
                 els.speakerSelect.classList.add('input-error');
-                setTimeout(() => {
-                    // Little shake or color pulse can be handled by CSS transition
-                }, 100);
                 return;
             }
 
@@ -603,7 +789,7 @@
             els.startBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg> Pause`;
             els.startBtn.style.backgroundColor = "#475569";
 
-            setAllPanels(false); // Collapse all
+            collapseAllPanels();
 
             timerInterval = setInterval(() => {
                 totalSeconds++;
@@ -618,7 +804,7 @@
             els.startBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Resume`;
             els.startBtn.style.backgroundColor = "#1e293b";
 
-            setAllPanels(true); // Expand all
+            setMainPanels(true);
 
             clearInterval(timerInterval);
         }
@@ -626,7 +812,6 @@
         function resetTimer() {
             const isBreak = currentPresetKey.startsWith('break');
 
-            // Only log if time passed AND it is not a break
             if (totalSeconds > 0 && !isBreak) {
                 addSessionLog();
             }
@@ -637,11 +822,10 @@
             els.startBtn.style.backgroundColor = "#1e293b";
             els.body.style.backgroundColor = defaultColor;
 
-            // Reset Speaker
             els.speakerSelect.value = 'nobody';
-            handleSpeakerChange(); // Ensures custom input is hidden
+            handleSpeakerChange();
 
-            setAllPanels(true);
+            setMainPanels(true);
 
             renderTime();
         }
@@ -674,16 +858,13 @@
             els.sessionList.scrollTop = els.sessionList.scrollHeight;
         }
 
-        // Replaced confirm() with double-tap logic
         let clearTimeoutHandle;
         function clearHistory(btn) {
             if (btn.innerText === 'Clear') {
-                // First Click: Change to Confirm
                 btn.innerText = 'Confirm?';
-                btn.style.color = '#dc2626'; // Darker red
+                btn.style.color = '#dc2626';
                 btn.style.fontWeight = '800';
 
-                // Auto reset if not clicked again
                 clearTimeoutHandle = setTimeout(() => {
                     btn.innerText = 'Clear';
                     btn.style.color = '#ef4444';
@@ -691,11 +872,9 @@
                 }, 3000);
 
             } else {
-                // Second Click: Execute Clear
                 els.sessionList.innerHTML = '<li id="empty-log-msg" style="text-align:center; padding:15px; color:#94a3b8; font-style:italic;">No sessions recorded yet</li>';
                 els.emptyLogMsg = document.getElementById('empty-log-msg');
 
-                // Reset Button
                 btn.innerText = 'Clear';
                 btn.style.color = '#ef4444';
                 btn.style.fontWeight = '600';
@@ -715,9 +894,9 @@
             const exactMatch = events.find(e => e.time === totalSeconds);
             if (exactMatch) {
                 els.body.style.backgroundColor = exactMatch.color;
-                if (events.length > 0) {
-                    const lastEvent = events[events.length - 1];
-                    if (exactMatch === lastEvent && exactMatch.time > 0) playAlarm();
+                // Check boolean alert property instead of hardcoded logic
+                if (exactMatch.alert) {
+                    playAlarm();
                 }
             } else {
                 const pastEvents = events.filter(e => e.time <= totalSeconds).sort((a, b) => b.time - a.time);
@@ -725,43 +904,67 @@
             }
         }
 
-        // --- PANEL UI LOGIC ---
+        function toggleAlertInput() {
+            inputAlertState = !inputAlertState;
+            if (inputAlertState) {
+                els.alertBtn.classList.add('active');
+                // Change icon to filled bell
+                els.alertBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>`;
+            } else {
+                els.alertBtn.classList.remove('active');
+                // Change icon to outlined bell
+                els.alertBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>`;
+            }
+        }
+
         function togglePanel(id) {
             const body = document.getElementById(`${id}-body`);
             const header = document.getElementById(`${id}-header`);
-            const icon = document.getElementById(`${id}-icon`);
+            const iconSvg = document.getElementById(`${id}-icon`);
+
+            if (!body || !header || !iconSvg) return;
+
+            const iconWrapper = iconSvg.closest('.toggle-btn');
 
             const isOpen = body.classList.contains('open');
 
             if (isOpen) {
                 body.classList.remove('open');
                 header.classList.remove('expanded');
-                icon.style.transform = 'rotate(180deg)';
+                iconWrapper.style.transform = 'rotate(180deg)';
             } else {
                 body.classList.add('open');
                 header.classList.add('expanded');
-                icon.style.transform = 'rotate(0deg)';
+                iconWrapper.style.transform = 'rotate(0deg)';
             }
         }
 
         function setPanelState(id, open) {
             const body = document.getElementById(`${id}-body`);
             const header = document.getElementById(`${id}-header`);
-            const icon = document.getElementById(`${id}-icon`);
+            const iconSvg = document.getElementById(`${id}-icon`);
+
+            if(!body || !header || !iconSvg) return;
+
+            const iconWrapper = iconSvg.closest('.toggle-btn');
 
             if (!open) {
                 body.classList.remove('open');
                 header.classList.remove('expanded');
-                icon.style.transform = 'rotate(180deg)';
+                iconWrapper.style.transform = 'rotate(180deg)';
             } else {
                 body.classList.add('open');
                 header.classList.add('expanded');
-                icon.style.transform = 'rotate(0deg)';
+                iconWrapper.style.transform = 'rotate(0deg)';
             }
         }
 
-        function setAllPanels(open) {
+        function setMainPanels(open) {
             ['events', 'speaker', 'report'].forEach(id => setPanelState(id, open));
+        }
+
+        function collapseAllPanels() {
+            ['events', 'speaker', 'report'].forEach(id => setPanelState(id, false));
         }
 
         function applyPreset(selectEl) {
@@ -779,11 +982,11 @@
                 events = presets[key].map((p, idx) => ({
                     id: Date.now() + idx,
                     time: p.time,
-                    color: p.color
+                    color: p.color,
+                    alert: p.alert // Carry over the alert property from preset
                 }));
                 renderEvents();
 
-                // FIX: Reset button text after preset change
                 els.startBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Start`;
                 els.startBtn.style.backgroundColor = "#1e293b";
             }
@@ -799,8 +1002,17 @@
             const color = els.color.value;
 
             const exists = events.find(e => e.time === total);
-            if (exists) exists.color = color;
-            else events.push({ id: Date.now(), time: total, color: color });
+            if (exists) {
+                exists.color = color;
+                exists.alert = inputAlertState; // Update alert state
+            } else {
+                events.push({
+                    id: Date.now(),
+                    time: total,
+                    color: color,
+                    alert: inputAlertState // Use current toggle state
+                });
+            }
 
             events.sort((a, b) => a.time - b.time);
             renderEvents();
@@ -824,11 +1036,18 @@
             els.list.innerHTML = events.map(e => {
                 const m = Math.floor(e.time / 60);
                 const s = e.time % 60;
+
+                // Visual Bell Icon for list item
+                const alertIcon = e.alert
+                    ? `<svg class="alert-icon" viewBox="0 0 24 24" fill="currentColor" stroke="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>`
+                    : '';
+
                 return `
                     <li class="event-item">
                         <div class="event-info">
                             <div class="color-dot" style="background-color: ${e.color}"></div>
                             ${pad(m)}:${pad(s)}
+                            ${alertIcon}
                         </div>
                         <button onclick="removeEvent(${e.id})" class="delete-btn">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>

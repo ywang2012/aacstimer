@@ -1,9 +1,8 @@
-const CACHE_NAME = 'chromatic-timer-v2'; // Incremented version
+const CACHE_NAME = 'chromatic-timer-v7'; // Incremented version
 const URLS_TO_CACHE = [
   '/',
   '/index.html',
   '/manifest.json'
-  // Removed '/color_timer.html' because you renamed it to index.html
 ];
 
 self.addEventListener('install', event => {
