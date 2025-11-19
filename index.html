@@ -31,7 +31,6 @@
             min-height: 100dvh;
             display: flex;
             flex-direction: column;
-            /* Handle Safe Areas */
             padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
             padding-left: env(safe-area-inset-left);
@@ -132,6 +131,10 @@
         }
         .config-header.expanded { border-bottom-color: #e2e8f0; }
 
+        #speaker-header {
+            border-bottom: none !important;
+        }
+
         .config-title-group { display: flex; align-items: center; gap: 10px; }
         .config-title { font-weight: 700; font-size: 1.1rem; margin: 0; }
 
@@ -155,6 +158,7 @@
             cursor: pointer;
             padding: 5px;
             transition: color 0.2s;
+            margin-left: 5px;
         }
         .settings-btn:hover { color: #1e293b; }
 
@@ -169,7 +173,8 @@
             transition: border-color 0.3s, box-shadow 0.3s;
         }
 
-        .preset-select { max-width: 140px; }
+        /* WIDER PRESET SELECT */
+        .preset-select { max-width: 240px; }
 
         .settings-textarea {
             resize: vertical;
@@ -200,10 +205,9 @@
 
         /* Speaker Panel Specifics */
         .speaker-content {
-            padding: 20px;
+            padding: 0 20px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
         }
         .speaker-input.hidden { display: none; }
 
@@ -370,32 +374,33 @@
         .report-preset { color: #64748b; font-size: 0.8rem; }
         .report-time { font-family: monospace; font-weight: 700; color: #2563eb; text-align: right; }
 
-        .clear-link {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #ef4444;
+        /* Icon Action Buttons (Share / Clear) */
+        .icon-action-btn {
             background: none;
             border: none;
+            color: #64748b;
             cursor: pointer;
-            padding: 4px 10px;
-            border-radius: 4px;
-            transition: background-color 0.2s;
+            padding: 6px;
+            border-radius: 50%;
+            transition: background-color 0.2s, color 0.2s;
+            margin-left: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
-        .clear-link:hover { background-color: #fee2e2; }
+        .icon-action-btn:hover { background-color: #f1f5f9; color: #1e293b; }
+        .icon-action-btn svg { width: 20px; height: 20px; }
 
-        .share-link {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #2563eb;
-            background: none;
-            border: none;
-            cursor: pointer;
+        /* Text confirm state for icon button */
+        .icon-action-btn.confirm-state {
+            width: auto;
+            border-radius: 8px;
             padding: 4px 10px;
-            border-radius: 4px;
-            transition: background-color 0.2s;
-            margin-right: 5px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #dc2626;
+            background-color: #fee2e2;
         }
-        .share-link:hover { background-color: #dbeafe; }
 
         /* Icons */
         svg { width: 20px; height: 20px; display: block; }
@@ -424,14 +429,14 @@
             </button>
         </div>
 
-        <!-- SPEAKER Panel (Consolidated Settings) -->
+        <!-- SPEAKER Panel (Consolidated Settings & Single Line) -->
         <div class="config-panel" id="speaker-panel">
-            <div class="config-header" id="speaker-header" onclick="togglePanel('speaker')">
-                <div class="config-title-group">
-                    <div class="toggle-btn">
-                        <svg id="speaker-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
-                    </div>
-                    <h2 class="config-title">Speaker</h2>
+            <div class="config-header" id="speaker-header">
+                <div class="config-title-group" style="flex-grow: 1; margin-right: 10px; display: flex; align-items: center;">
+                    <h2 class="config-title" style="margin-right: 15px; white-space: nowrap;">Speaker</h2>
+                    <select id="speaker-select" onchange="handleSpeakerChange()" class="speaker-select" style="width: 100%; flex-grow: 1;">
+                        <!-- JS Injected -->
+                    </select>
                 </div>
                 <!-- Settings Icon -->
                 <button onclick="event.stopPropagation(); toggleSettingsView()" class="settings-btn" title="Edit Speakers">
@@ -440,24 +445,17 @@
             </div>
             <div id="speaker-body" class="config-body open">
                 <div class="speaker-content">
+                    <!-- Custom Input (Appears below header if selected) -->
+                    <input type="text" id="speaker-custom-input" class="speaker-input hidden" placeholder="Enter name..." style="margin-bottom: 15px; margin-top: 10px;">
 
-                    <!-- View 1: Select Speaker -->
-                    <div id="speaker-select-view" class="speaker-view">
-                        <select id="speaker-select" onchange="handleSpeakerChange()" class="speaker-select">
-                            <!-- JS Injected -->
-                        </select>
-                        <input type="text" id="speaker-custom-input" class="speaker-input hidden" placeholder="Enter name...">
-                    </div>
-
-                    <!-- View 2: Edit Settings -->
-                    <div id="speaker-edit-view" class="speaker-view hidden">
+                    <!-- View 2: Edit Settings (Appears below header if toggled) -->
+                    <div id="speaker-edit-view" class="speaker-view hidden" style="margin-top: 10px; padding-bottom: 15px;">
                         <label style="display:block; margin-bottom:8px; font-weight:bold; font-size:0.9rem;">Edit Speaker List</label>
                         <div style="font-size:0.8rem; color:#64748b; margin-bottom:10px;">Separate names with commas.</div>
-                        <textarea id="settings-speakers-input" class="settings-textarea" placeholder="Hua, Jin-song, Haifeng..."></textarea>
+                        <textarea id="settings-speakers-input" class="settings-textarea" placeholder="Name 1, Name 2..."></textarea>
                         <button onclick="saveSpeakerSettings()" class="save-btn">Save Changes</button>
                         <button onclick="resetSpeakerSettings(this)" class="reset-btn">Reset to Default</button>
                     </div>
-
                 </div>
             </div>
         </div>
@@ -528,9 +526,15 @@
                     </div>
                     <h2 class="config-title">Session Report</h2>
                 </div>
-                <div>
-                    <button onclick="event.stopPropagation(); shareReport()" class="share-link">Share</button>
-                    <button onclick="event.stopPropagation(); clearHistory(this)" class="clear-link">Clear</button>
+                <div style="display: flex; align-items: center;">
+                    <!-- Share Icon Btn -->
+                    <button onclick="event.stopPropagation(); shareReport()" class="icon-action-btn" title="Share Report">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                    </button>
+                    <!-- Clear/Trash Icon Btn -->
+                    <button onclick="event.stopPropagation(); clearHistory(this)" class="icon-action-btn" title="Clear History">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    </button>
                 </div>
             </div>
             <div id="report-body" class="config-body open">
@@ -563,7 +567,8 @@
         let inputAlertState = false; // Track state of new event alert toggle
 
         // Speaker Management
-        const defaultSpeakers = ["Hua", "Jin-song", "Haifeng", "Leslie", "David", "Rong", "Henry", "Jessica", "Phillips", "Sammy", "Yujun"];
+        // Sorted default speakers
+        const defaultSpeakers = ["David", "Haifeng", "Henry", "Hua", "Jessica", "Jin-song", "Leslie", "Phillips", "Rong", "Sammy", "Yujun"];
         let currentSpeakers = [...defaultSpeakers];
 
         // --- PRESETS ---
@@ -613,7 +618,6 @@
             emptyLogMsg: document.getElementById('empty-log-msg'),
             speakerPanel: document.getElementById('speaker-panel'),
             settingsInput: document.getElementById('settings-speakers-input'),
-            speakerSelectView: document.getElementById('speaker-select-view'),
             speakerEditView: document.getElementById('speaker-edit-view')
         };
 
@@ -732,10 +736,7 @@
 
             if (isEditing) {
                 els.speakerEditView.classList.add('hidden');
-                els.speakerSelectView.classList.remove('hidden');
             } else {
-                setPanelState('speaker', true);
-                els.speakerSelectView.classList.add('hidden');
                 els.speakerEditView.classList.remove('hidden');
             }
         }
@@ -763,7 +764,7 @@
                 handleSpeakerChange();
             }
 
-            toggleSettingsView();
+            toggleSettingsView(); // Hides the editor
         }
 
         let resetTimeoutHandle;
@@ -811,9 +812,7 @@
         }
 
         function handleSpeakerChange() {
-            // Start audio unlock sequence on speaker interaction to prep iOS audio engine early
             ensureAudio();
-
             els.speakerSelect.classList.remove('input-error');
 
             if (els.speakerSelect.value === 'Custom') {
@@ -831,17 +830,16 @@
             const isBreak = currentPresetKey.startsWith('break');
 
             if (speakerVal === 'nobody' && !isBreak) {
+                // Ensure editor is hidden so we see dropdown
                 if (!els.speakerEditView.classList.contains('hidden')) {
                      toggleSettingsView();
                 }
 
-                setPanelState('speaker', true);
                 els.speakerPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 els.speakerSelect.classList.add('input-error');
                 return;
             }
 
-            // iOS Fix: Start continuous silent audio
             startSilentHum();
             requestWakeLock();
 
@@ -860,7 +858,7 @@
 
         function stopTimer() {
             isRunning = false;
-            stopSilentHum(); // Stop the battery drain/audio lock
+            stopSilentHum();
             releaseWakeLock();
             els.startBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Resume`;
             els.startBtn.style.backgroundColor = "#1e293b";
@@ -877,7 +875,7 @@
                 addSessionLog();
             }
 
-            stopTimer(); // also stops silent hum
+            stopTimer();
             totalSeconds = 0;
             els.startBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Start`;
             els.startBtn.style.backgroundColor = "#1e293b";
@@ -942,33 +940,34 @@
             } else {
                 navigator.clipboard.writeText(text).then(() => {
                     const btn = document.querySelector('.share-link');
-                    const original = btn.innerText;
-                    btn.innerText = 'Copied!';
-                    setTimeout(() => btn.innerText = original, 2000);
+                    // We use a text fallback if sharing fails, but for icon btn we don't change innerHTML here as easily
+                    // Just alert for fallback
+                    alert('Report copied to clipboard!');
                 });
             }
         }
 
         let clearTimeoutHandle;
         function clearHistory(btn) {
-            if (btn.innerText === 'Clear') {
+            const trashIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`;
+
+            if (!btn.classList.contains('confirm-state')) {
+                // First Click
+                btn.classList.add('confirm-state');
                 btn.innerText = 'Confirm?';
-                btn.style.color = '#dc2626';
-                btn.style.fontWeight = '800';
 
                 clearTimeoutHandle = setTimeout(() => {
-                    btn.innerText = 'Clear';
-                    btn.style.color = '#ef4444';
-                    btn.style.fontWeight = '600';
+                    btn.classList.remove('confirm-state');
+                    btn.innerHTML = trashIcon;
                 }, 3000);
 
             } else {
+                // Second Click
                 els.sessionList.innerHTML = '<li id="empty-log-msg" style="text-align:center; padding:15px; color:#94a3b8; font-style:italic;">No sessions recorded yet</li>';
                 els.emptyLogMsg = document.getElementById('empty-log-msg');
 
-                btn.innerText = 'Clear';
-                btn.style.color = '#ef4444';
-                btn.style.fontWeight = '600';
+                btn.classList.remove('confirm-state');
+                btn.innerHTML = trashIcon;
                 if (clearTimeoutHandle) clearTimeout(clearTimeoutHandle);
             }
         }
@@ -1008,42 +1007,48 @@
         function togglePanel(id) {
             const body = document.getElementById(`${id}-body`);
             const header = document.getElementById(`${id}-header`);
+
             const iconSvg = document.getElementById(`${id}-icon`);
+            let iconWrapper = null;
+            if (iconSvg) {
+                 iconWrapper = iconSvg.closest('.toggle-btn');
+            }
 
-            if (!body || !header || !iconSvg) return;
-
-            const iconWrapper = iconSvg.closest('.toggle-btn');
+            if (!body || !header) return;
 
             const isOpen = body.classList.contains('open');
 
             if (isOpen) {
                 body.classList.remove('open');
                 header.classList.remove('expanded');
-                iconWrapper.style.transform = 'rotate(180deg)';
+                if (iconWrapper) iconWrapper.style.transform = 'rotate(180deg)';
             } else {
                 body.classList.add('open');
                 header.classList.add('expanded');
-                iconWrapper.style.transform = 'rotate(0deg)';
+                if (iconWrapper) iconWrapper.style.transform = 'rotate(0deg)';
             }
         }
 
         function setPanelState(id, open) {
             const body = document.getElementById(`${id}-body`);
             const header = document.getElementById(`${id}-header`);
+
             const iconSvg = document.getElementById(`${id}-icon`);
+            let iconWrapper = null;
+            if (iconSvg) {
+                 iconWrapper = iconSvg.closest('.toggle-btn');
+            }
 
-            if(!body || !header || !iconSvg) return;
-
-            const iconWrapper = iconSvg.closest('.toggle-btn');
+            if(!body || !header) return;
 
             if (!open) {
                 body.classList.remove('open');
                 header.classList.remove('expanded');
-                iconWrapper.style.transform = 'rotate(180deg)';
+                if (iconWrapper) iconWrapper.style.transform = 'rotate(180deg)';
             } else {
                 body.classList.add('open');
                 header.classList.add('expanded');
-                iconWrapper.style.transform = 'rotate(0deg)';
+                if (iconWrapper) iconWrapper.style.transform = 'rotate(0deg)';
             }
         }
 
