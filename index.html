@@ -138,6 +138,7 @@
         .config-title-group { display: flex; align-items: center; gap: 10px; }
         .config-title { font-weight: 700; font-size: 1.1rem; margin: 0; }
 
+        /* Toggle Button (Chevron) */
         .toggle-btn {
             background: #f1f5f9;
             border: none;
@@ -151,14 +152,20 @@
             transition: transform 0.3s;
         }
 
+        /* Settings Button (Gear) */
         .settings-btn {
-            background: none;
+            background: #f1f5f9;
             border: none;
-            color: #64748b;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            transition: color 0.2s, background-color 0.2s;
             cursor: pointer;
-            padding: 5px;
-            transition: color 0.2s;
-            margin-left: 5px;
+            color: #64748b;
         }
         .settings-btn:hover { color: #1e293b; }
 
@@ -171,9 +178,13 @@
             color: #334155;
             width: 100%;
             transition: border-color 0.3s, box-shadow 0.3s;
+
+            /* Right Align Text */
+            text-align: right;
+            text-align-last: right;
         }
 
-        /* WIDER PRESET SELECT */
+        /* WIDER PRESET SELECT - 200px */
         .preset-select { max-width: 200px; }
 
         .settings-textarea {
@@ -181,6 +192,8 @@
             min-height: 100px;
             font-family: inherit;
             margin-bottom: 10px;
+            text-align: left;
+            text-align-last: left;
         }
 
         /* Error State */
@@ -281,7 +294,9 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
+            transition: background-color 0.2s;
         }
+        .add-btn:hover { background-color: #1d4ed8; }
 
         .save-btn {
             background: #1e293b;
@@ -429,26 +444,25 @@
             </button>
         </div>
 
-        <!-- SPEAKER Panel (Consolidated Settings & Single Line) -->
+        <!-- SPEAKER Panel -->
         <div class="config-panel" id="speaker-panel">
             <div class="config-header" id="speaker-header">
-                <div class="config-title-group" style="flex-grow: 1; margin-right: 10px; display: flex; align-items: center;">
-                    <h2 class="config-title" style="margin-right: 15px; white-space: nowrap;">Speaker</h2>
-                    <select id="speaker-select" onchange="handleSpeakerChange()" class="speaker-select" style="width: 100%; flex-grow: 1;">
+                <div class="config-title-group">
+                    <h2 class="config-title">Speaker</h2>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <select id="speaker-select" onchange="handleSpeakerChange()" class="speaker-select" style="width: auto; max-width: 200px;">
                         <!-- JS Injected -->
                     </select>
+                    <!-- Settings Icon on RIGHT -->
+                    <button onclick="event.stopPropagation(); toggleSettingsView()" class="settings-btn" title="Edit Speakers">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    </button>
                 </div>
-                <!-- Settings Icon -->
-                <button onclick="event.stopPropagation(); toggleSettingsView()" class="settings-btn" title="Edit Speakers">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                </button>
             </div>
             <div id="speaker-body" class="config-body open">
                 <div class="speaker-content">
-                    <!-- Custom Input (Appears below header if selected) -->
                     <input type="text" id="speaker-custom-input" class="speaker-input hidden" placeholder="Enter name..." style="margin-bottom: 15px; margin-top: 10px;">
-
-                    <!-- View 2: Edit Settings (Appears below header if toggled) -->
                     <div id="speaker-edit-view" class="speaker-view hidden" style="margin-top: 10px; padding-bottom: 15px;">
                         <label style="display:block; margin-bottom:8px; font-weight:bold; font-size:0.9rem;">Edit Speaker List</label>
                         <div style="font-size:0.8rem; color:#64748b; margin-bottom:10px;">Separate names with commas.</div>
@@ -464,24 +478,26 @@
         <div class="config-panel">
             <div class="config-header" id="events-header" onclick="togglePanel('events')">
                 <div class="config-title-group">
+                    <h2 class="config-title">Events</h2>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <select id="preset-select" onclick="event.stopPropagation()" onchange="applyPreset(this)" class="preset-select">
+                        <option value="custom">Custom</option>
+                        <option value="lightning">Lightning (2m)</option>
+                        <option value="standard" selected>Standard (5-7m)</option>
+                        <option value="evaluation">Evaluation (3m)</option>
+                        <option value="break1">Break (1m)</option>
+                        <option value="break5">Break (5m)</option>
+                    </select>
+                    <!-- Collapse Icon on RIGHT -->
                     <div class="toggle-btn">
                         <svg id="events-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
                     </div>
-                    <h2 class="config-title">Events</h2>
                 </div>
-                <select id="preset-select" onclick="event.stopPropagation()" onchange="applyPreset(this)" class="preset-select">
-                    <option value="custom">Custom</option>
-                    <option value="lightning">Lightning (2m)</option>
-                    <option value="standard" selected>Standard (5-7m)</option>
-                    <option value="evaluation">Evaluation (3m)</option>
-                    <option value="break1">Break (1m)</option>
-                    <option value="break5">Break (5m)</option>
-                </select>
             </div>
 
             <div id="events-body" class="config-body open">
                 <div class="config-content">
-                    <!-- Input Form -->
                     <div class="input-row">
                         <div class="input-group">
                             <label>Min</label>
@@ -497,22 +513,15 @@
                                 <input type="color" id="input-color" value="#fcd34d">
                             </div>
                         </div>
-
-                        <!-- Alert Toggle Button -->
                         <div class="input-group" style="flex: 0 0 43px;">
                             <label>Alert</label>
                             <button id="input-alert-btn" onclick="toggleAlertInput()" class="alert-toggle-btn">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
                             </button>
                         </div>
-
                         <button onclick="addEvent()" class="add-btn">+</button>
                     </div>
-
-                    <!-- List -->
-                    <ul id="events-list" class="event-list">
-                        <!-- JS Injected -->
-                    </ul>
+                    <ul id="events-list" class="event-list"></ul>
                 </div>
             </div>
         </div>
@@ -521,20 +530,21 @@
         <div class="config-panel">
             <div class="config-header" id="report-header" onclick="togglePanel('report')">
                 <div class="config-title-group">
+                    <h2 class="config-title">Session Report</h2>
+                </div>
+                <div style="display:flex; align-items:center; gap: 10px;">
+                    <div style="display: flex; align-items: center;">
+                        <button onclick="event.stopPropagation(); shareReport()" class="icon-action-btn" title="Share Report">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                        </button>
+                        <button onclick="event.stopPropagation(); clearHistory(this)" class="icon-action-btn" title="Clear History">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        </button>
+                    </div>
+                    <!-- Collapse Icon on RIGHT -->
                     <div class="toggle-btn">
                         <svg id="report-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
                     </div>
-                    <h2 class="config-title">Session Report</h2>
-                </div>
-                <div style="display: flex; align-items: center;">
-                    <!-- Share Icon Btn -->
-                    <button onclick="event.stopPropagation(); shareReport()" class="icon-action-btn" title="Share Report">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-                    </button>
-                    <!-- Clear/Trash Icon Btn -->
-                    <button onclick="event.stopPropagation(); clearHistory(this)" class="icon-action-btn" title="Clear History">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                    </button>
                 </div>
             </div>
             <div id="report-body" class="config-body open">
@@ -559,15 +569,13 @@
         let isRunning = false;
         let events = [];
         let audioCtx = null;
-        let silentOsc = null; // Track silent oscillator for iOS Keep-Alive
+        let silentOsc = null;
         let wakeLock = null;
         const defaultColor = '#f1f5f9';
         let currentPresetName = "Standard (5-7m)";
         let currentPresetKey = "standard";
-        let inputAlertState = false; // Track state of new event alert toggle
+        let inputAlertState = false;
 
-        // Speaker Management
-        // Sorted default speakers
         const defaultSpeakers = ["David", "Haifeng", "Henry", "Hua", "Jessica", "Jin-song", "Leslie", "Phillips", "Rong", "Sammy", "Yujun"];
         let currentSpeakers = [...defaultSpeakers];
 
@@ -638,7 +646,7 @@
             ensureAudio();
             if (!audioCtx) return;
 
-            stopSilentHum(); // Ensure only one runs
+            stopSilentHum();
 
             try {
                 const osc = audioCtx.createOscillator();
@@ -736,8 +744,11 @@
 
             if (isEditing) {
                 els.speakerEditView.classList.add('hidden');
+                handleSpeakerChange();
             } else {
+                setPanelState('speaker', true);
                 els.speakerEditView.classList.remove('hidden');
+                els.speakerInput.classList.add('hidden');
             }
         }
 
@@ -1008,6 +1019,7 @@
             const body = document.getElementById(`${id}-body`);
             const header = document.getElementById(`${id}-header`);
 
+            // Safe access to icon for panels that still have it (Events/Report)
             const iconSvg = document.getElementById(`${id}-icon`);
             let iconWrapper = null;
             if (iconSvg) {
@@ -1033,6 +1045,7 @@
             const body = document.getElementById(`${id}-body`);
             const header = document.getElementById(`${id}-header`);
 
+            // Safe access to icon
             const iconSvg = document.getElementById(`${id}-icon`);
             let iconWrapper = null;
             if (iconSvg) {
